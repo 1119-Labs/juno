@@ -148,6 +148,11 @@ func (db *Database) GetTotalBlocks() int64 {
 
 // SaveTx implements database.Database
 func (db *Database) SaveTx(tx *types.Transaction) error {
+
+	if tx == nil {
+		return fmt.Errorf("error nil transaction")
+	}
+
 	var partitionID int64
 
 	partitionSize := config.Cfg.Database.PartitionSize
@@ -168,9 +173,8 @@ func (db *Database) saveTxInsidePartition(tx *types.Transaction, partitionID int
 INSERT INTO transaction 
 (hash, height, success, messages, memo, signatures, signer_infos, fee, gas_wanted, gas_used, raw_log, logs, partition_id) 
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
-ON CONFLICT (hash, partition_id) DO UPDATE 
-	SET height = excluded.height, 
-		success = excluded.success, 
+ON CONFLICT (hash, height, partition_id) DO UPDATE 
+	SET success = excluded.success, 
 		messages = excluded.messages,
 		memo = excluded.memo, 
 		signatures = excluded.signatures, 
@@ -294,9 +298,8 @@ func (db *Database) saveMessageInsidePartition(height int64, txHash string, addr
 	stmt := `
 INSERT INTO message(transaction_hash, index, type, value, involved_accounts_addresses, height, partition_id) 
 VALUES ($1, $2, $3, $4, $5, $6, $7) 
-ON CONFLICT (transaction_hash, index, partition_id) DO UPDATE 
-	SET height = excluded.height, 
-		type = excluded.type,
+ON CONFLICT (transaction_hash, height, index, partition_id) DO UPDATE 
+	SET type = excluded.type,
 		value = excluded.value,
 		involved_accounts_addresses = excluded.involved_accounts_addresses`
 

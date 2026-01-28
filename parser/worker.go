@@ -332,6 +332,9 @@ func (w Worker) handleMessage(index int, msg types.Message, tx *types.Transactio
 func (w Worker) ExportTxs(txs []*types.Transaction) error {
 	// handle all transactions inside the block
 	for _, tx := range txs {
+		if tx == nil {
+			continue
+		}
 		// save the transaction
 		err := w.saveTx(tx)
 		if err != nil {

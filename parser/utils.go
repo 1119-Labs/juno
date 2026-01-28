@@ -26,7 +26,13 @@ func sumGasTxs(txs []*types.Transaction) uint64 {
 	var totalGas uint64
 
 	for _, tx := range txs {
-		totalGas += tx.GasUsed
+		if tx == nil {
+			continue
+		}
+		// Only add positive gas values (negative values like -1 indicate errors)
+		if tx.GasUsed > 0 {
+			totalGas += uint64(tx.GasUsed)
+		}
 	}
 
 	return totalGas
